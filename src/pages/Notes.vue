@@ -39,7 +39,8 @@ import {
   IconCopy,
   IconInfoCircle,
   IconBulb,
-  IconRefresh
+  IconRefresh,
+  IconPhoto
 } from '@iconify-prerendered/vue-tabler'
 import { useNostrNotes } from '../composables/content/useNostrNotes.js'
 import { useNostrAuth } from '../composables/auth/useNostrAuth.js'
@@ -54,6 +55,7 @@ import MentionInput from '../components/content/MentionInput.vue'
 import NoteContentRenderer from '../components/content/NoteContentRenderer.vue'
 import ThreadsPromo from '../components/shared/ThreadsPromo.vue'
 import SkeletonNotes from '../components/shared/SkeletonNotes.vue'
+import MediaPickerModal from '../components/media/MediaPickerModal.vue'
 
 const { isAuthenticated, currentUser, userProfile, login } = useNostrAuth()
 
@@ -130,6 +132,7 @@ const selectedZapper = ref(null)
 const showSuccessModal = ref(false)
 const lastPublishResult = ref(null)
 const showPreview = ref(false)
+const showMediaPicker = ref(false)
 
 
 // Debounced note stats — avoids recomputing on every single zap/engagement event
@@ -491,6 +494,14 @@ const togglePreview = () => {
 // Handle mention added
 const handleMentionAdded = (user) => {
   // no-op — event binding placeholder
+}
+
+// Handle media selection from picker
+const handleMediaSelect = (media) => {
+  const url = media.url
+  const content = noteForm.content || ''
+  const suffix = content && !content.endsWith('\n') ? '\n' : ''
+  noteForm.content = content + suffix + url + '\n'
 }
 
 // Handle mention click in preview
@@ -1014,7 +1025,17 @@ const handleMentionClick = ({ pubkey, profile }) => {
             
             <!-- Bottom Bar -->
             <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-              <div class="flex items-center space-x-3">
+              <div class="flex items-center space-x-1.5">
+                <!-- Media picker -->
+                <button
+                  @click="showMediaPicker = true"
+                  type="button"
+                  class="text-sm text-gray-500 hover:text-orange-600 p-1.5 rounded-lg hover:bg-orange-50 transition-colors"
+                  title="Insert media"
+                >
+                  <IconPhoto class="w-4.5 h-4.5" />
+                </button>
+
                 <!-- Preview Toggle -->
                 <button
                   v-if="noteForm.content.length > 0"
@@ -1025,7 +1046,7 @@ const handleMentionClick = ({ pubkey, profile }) => {
                   <span>{{ showPreview ? 'Edit' : 'Preview' }}</span>
                 </button>
 
-                <div class="text-sm text-gray-500 flex items-center space-x-1">
+                <div class="hidden sm:flex text-sm text-gray-500 items-center space-x-1">
                   <IconUsers class="w-4 h-4" />
                   <span>Everyone can reply</span>
                 </div>
@@ -1257,6 +1278,13 @@ const handleMentionClick = ({ pubkey, profile }) => {
     content-type="note"
     :publish-result="lastPublishResult"
     @close="closeSuccessModal"
+  />
+
+  <!-- Media Picker Modal -->
+  <MediaPickerModal
+    :visible="showMediaPicker"
+    @close="showMediaPicker = false"
+    @select="handleMediaSelect"
   />
 
 </template>

@@ -25,6 +25,8 @@ import { storageService } from './services/StorageService.js'
 import { useNotifications } from './composables/core/useNotifications.js'
 import { nostrService } from './services/nostr/NostrService.js'
 import { useNostrNotes } from './composables/content/useNostrNotes.js'
+import { useCampaigns } from './composables/campaigns/useCampaigns.js'
+import { useAudience } from './composables/audience/useAudience.js'
 import { startRefreshCycle, stopRefreshCycle, setActiveGroup } from './utils/refreshCycle.js'
 import { APP_HARD_TIMEOUT, RELAY_READY_TIMEOUT } from './utils/constants.js'
 import AppLoader from './components/layout/AppLoader.vue'
@@ -174,7 +176,7 @@ const {
 } = useNotifications()
 
 // Use the content zaps composable to get NIP-57 zaps
-const { getAllContentZaps } = useContentZaps()
+const { getAllContentZaps, isTrackingZaps } = useContentZaps()
 
 // Content zaps now self-initialize via watch(isAuthenticated)
 
@@ -183,7 +185,13 @@ const { userZaps, isLoading: isUserZapsLoading } = useUserZaps()
 
 // Initialize notes tracking early (composable self-registers with refresh cycle)
 const { notes, isFetchingNotes } = useNostrNotes()
-useNostrLongForm() // triggers composable initialization + refresh registration
+const { isLoading: isLongFormLoading, longFormContent } = useNostrLongForm()
+
+// Initialize campaigns early so loading screen can track them
+const { isLoading: isCampaignsLoading, userCampaigns } = useCampaigns()
+
+// Initialize audience early so loading screen can track it
+const { isLoading: isAudienceLoading, following, followers } = useAudience()
 
 // Global state
 const zapData = ref([])
@@ -338,6 +346,7 @@ const enhancedCombinedZapData = computed(() => {
     return zap
   })
 })
+
 
 // Provide data to child components
 provide('zapData', zapData)
@@ -807,7 +816,7 @@ const runLoadingSequence = async () => {
   loadingPhase.value = 'profile'
   await new Promise(r => setTimeout(r, 800))
 
-  // Phase: syncing — wait for composables to finish their initial fetch
+  // Phase: syncing — wait for ALL composables to finish their initial fetch
   loadingPhase.value = 'syncing'
   await Promise.race([
     new Promise(resolve => {
@@ -818,11 +827,31 @@ const runLoadingSequence = async () => {
       let notesStarted = isFetchingNotes.value
 
       const isDone = () => {
-        // Both must have started and finished, OR have data already
+        // Zaps + notes: must have started and finished, OR have data already
         const zapsReady = zapsStarted && !isUserZapsLoading.value
         const notesReady = notesStarted && !isFetchingNotes.value
-        const hasData = notes.value.length > 0 || userZaps.value.length > 0
-        return (zapsReady && notesReady) || hasData
+        const coreHasData = notes.value.length > 0 || userZaps.value.length > 0
+        const coreReady = (zapsReady && notesReady) || coreHasData
+
+        if (!coreReady) return false
+
+        // Campaigns: wait for fetch to finish (isLoading goes true→false during fetchUserCampaigns)
+        if (isCampaignsLoading.value) return false
+
+        // Profiles: wait for initial batch (debounced 2s after zaps arrive).
+        // Skip if no zaps — no profiles to fetch.
+        if (userZaps.value.length > 0 && profileStore.value.size === 0) return false
+
+        // Long-form articles: wait for fetch to finish
+        if (isLongFormLoading.value) return false
+
+        // Audience (followers/following): wait for fetch to finish
+        if (isAudienceLoading.value) return false
+
+        // Content zaps: wait for subscription to open (only if there's content to track)
+        if (!isTrackingZaps.value && (notes.value.length > 0 || longFormContent.value.length > 0)) return false
+
+        return true
       }
 
       if (isDone()) { resolve(); return }
@@ -831,7 +860,13 @@ const runLoadingSequence = async () => {
         () => ({
           zapsLoading: isUserZapsLoading.value,
           notesLoading: isFetchingNotes.value,
-          dataLen: notes.value.length + userZaps.value.length
+          campaignsLoading: isCampaignsLoading.value,
+          longFormLoading: isLongFormLoading.value,
+          audienceLoading: isAudienceLoading.value,
+          trackingZaps: isTrackingZaps.value,
+          dataLen: notes.value.length + userZaps.value.length,
+          longFormLen: longFormContent.value.length,
+          profileCount: profileStore.value.size
         }),
         ({ zapsLoading, notesLoading }) => {
           if (zapsLoading) zapsStarted = true
@@ -841,7 +876,7 @@ const runLoadingSequence = async () => {
       )
     }),
     // Safety net: don't block forever (new user with no data, or slow relays)
-    new Promise(r => setTimeout(r, 12000))
+    new Promise(r => setTimeout(r, 20000))
   ])
 
   // Phase: ready
@@ -922,6 +957,13 @@ const handleChecklistTaskAction = async (action) => {
       :note-count="notes.length"
       :zaps-loading="isUserZapsLoading"
       :notes-loading="isFetchingNotes"
+      :campaign-count="userCampaigns.length"
+      :campaigns-loading="isCampaignsLoading"
+      :profile-count="profileStore.size"
+      :long-form-count="longFormContent.length"
+      :long-form-loading="isLongFormLoading"
+      :audience-count="following.length + followers.length"
+      :audience-loading="isAudienceLoading"
     />
   </Transition>
 
