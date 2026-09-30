@@ -21,7 +21,8 @@ import {
   IconCalendar,
   IconHelp,
   IconBook,
-  IconRss
+  IconRss,
+  IconFileImport
 } from '@iconify-prerendered/vue-tabler'
 import NotificationDropdown from '../shared/NotificationDropdown.vue'
 import ThreadsPromo from '../shared/ThreadsPromo.vue'
@@ -114,6 +115,11 @@ const pageInfo = computed(() => {
       title: 'Content Bridge',
       description: 'Syndicate your blog posts to Nostr',
       icon: IconRss
+    },
+    'import': {
+      title: 'Import Content',
+      description: 'Bring your posts from other platforms to Nostr',
+      icon: IconFileImport
     },
     'social-desk': {
       title: 'SocialDesk',

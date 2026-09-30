@@ -150,6 +150,21 @@ Media library for uploading, browsing, and managing files via Blossom servers.
 - `useMediaState.js` - Shared media state (files, filters, counts)
 - `useBlossom.js` - Blossom server upload/delete operations
 
+### Content Bridge & Import (`bridge/`, `import/`)
+Bring content from other platforms to Nostr. Both publish long-form posts with the same deterministic d-tag, so an article imported once and later syndicated is never duplicated.
+
+**Content Bridge** (`pages/ContentBridge.vue`) — connect a blog's RSS/Atom feed (Ghost, Substack, Medium, WordPress, Blogger, Discourse) and cross-post or auto-publish new posts while the app is open.
+- `composables/content/useContentBridge.js` - Feeds, syndication history, refresh-cycle checks, auto-publish
+- `services/bridge/bridgeClient.js` - Feed discovery/fetching and Blossom media mirroring via the proxy
+- `utils/bridge/` - Feed parser, HTML → Markdown, NIP-23 / kind 1 event builders
+- `netlify/functions/bridge-proxy.mjs` - CORS proxy for feeds and images (SSRF-guarded); served by a Vite middleware in dev
+
+**Import** (`pages/ImportContent.vue`) — upload a data export (X/Twitter, Instagram, Facebook, TikTok, Substack, Medium, Ghost, WordPress, Blogger) and choose what to publish.
+- `composables/content/useContentImport.js` - Parse, select, sequential import job (pause/cancel), import history
+- `utils/import/zipReader.js` - Random-access ZIP reader over `Blob.slice` + `DecompressionStream` (handles multi-GB archives)
+- `utils/import/socialParsers.js`, `blogParsers.js`, `detectExport.js` - Per-platform parsers and auto-detection
+- `utils/import/importToEvent.js` - Kind 1 notes with NIP-92 `imeta` tags and NIP-10 thread tags
+
 ### Layout (`layout/`)
 Core layout components.
 

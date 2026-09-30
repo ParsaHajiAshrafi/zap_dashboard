@@ -170,6 +170,7 @@ export const STORAGE_KEYS = {
   BRIDGE_FEEDS: 'content_bridge_feeds',
   BRIDGE_SYNDICATED: 'content_bridge_syndicated',
   BRIDGE_MEDIA_MAP: 'content_bridge_media_map',
+  IMPORT_HISTORY: 'content_import_history',
 
   // UI state
   WELCOME_SEEN: 'zaptracker_welcome_seen',

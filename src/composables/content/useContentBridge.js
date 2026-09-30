@@ -226,7 +226,7 @@ export function useContentBridge() {
 
   async function publishItem(feedId, key, { mode, auto = false } = {}) {
     if (!isAuthenticated.value || !signerService.isConnected) {
-      throw new Error('Connect your Nostr signer to publish')
+      throw new Error('Your Nostr signer isn\u2019t connected yet. Unlock your extension or wait a moment for it to reconnect, then try again.')
     }
     const feed = findFeed(feedId)
     const item = getItem(feedId, key)

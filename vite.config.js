@@ -98,17 +98,24 @@ export default defineConfig({
             }
         })
     ],
-    esbuild: {
-        drop: ['console', 'debugger']
-    },
     build: {
-        rollupOptions: {
+        rolldownOptions: {
             output: {
-                manualChunks: {
-                    'echarts': ['echarts', 'vue-echarts'],
-                    'nostr-core': ['nostr-core'],
-                    'dicebear': ['@dicebear/core', '@dicebear/collection'],
-                    'fullcalendar': ['@fullcalendar/core', '@fullcalendar/vue3', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/interaction', '@fullcalendar/list']
+                // Strip console/debugger from production bundles (dev keeps its logs)
+                minify: {
+                    compress: {
+                        dropConsole: true,
+                        dropDebugger: true
+                    }
+                },
+                // Vendor chunks, including each library's own dependencies
+                codeSplitting: {
+                    groups: [
+                        {name: 'echarts', test: /node_modules[\\/](echarts|zrender|vue-echarts)[\\/]/},
+                        {name: 'nostr-core', test: /node_modules[\\/](nostr-core|@noble|@scure)[\\/]/},
+                        {name: 'dicebear', test: /node_modules[\\/]@dicebear[\\/]/},
+                        {name: 'fullcalendar', test: /node_modules[\\/](@fullcalendar|preact)[\\/]/}
+                    ]
                 }
             }
         },
