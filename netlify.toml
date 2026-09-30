@@ -12,3 +12,5 @@ status = 200
 [build]
 command = "npx vite build"
 publish = "dist"
+[functions]
+directory = "netlify/functions"

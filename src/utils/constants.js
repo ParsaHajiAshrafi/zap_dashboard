@@ -166,6 +166,11 @@ export const STORAGE_KEYS = {
   // SocialDesk
   DESK_COLUMNS: 'socialdesk_columns',
 
+  // Content Bridge (preserved across logout)
+  BRIDGE_FEEDS: 'content_bridge_feeds',
+  BRIDGE_SYNDICATED: 'content_bridge_syndicated',
+  BRIDGE_MEDIA_MAP: 'content_bridge_media_map',
+
   // UI state
   WELCOME_SEEN: 'zaptracker_welcome_seen',
   BTC_PRICE: 'btcPriceData',
