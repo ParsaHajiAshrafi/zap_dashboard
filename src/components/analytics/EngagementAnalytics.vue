@@ -129,7 +129,7 @@ const buildContentPerformance = (typeFilter) => {
     .filter(content => content.type === typeFilter)
     .map(content => ({
       ...content,
-      totalScore: (content.zaps * 10) + (content.reposts * 3) + (content.quotes * 2) + (content.likes * 1) + (content.bookmarks * 2)
+      totalScore: (content.zaps * 10) + (content.reposts * 3) + (content.quotes * 3) + (content.likes * 1) + (content.bookmarks * 2)
     }))
     .filter(content => content.totalScore > 0)
     .sort((a, b) => b.totalScore - a.totalScore)

@@ -18,7 +18,12 @@ const ENGAGEMENT_STORAGE_KEY = 'engagement_metrics_cache'
 const cachedMetrics = storageService.get(ENGAGEMENT_STORAGE_KEY, null)
 if (cachedMetrics) {
   Object.entries(cachedMetrics).forEach(([eventId, metrics]) => {
-    engagementMetrics.set(eventId, metrics)
+    // Entries cached before a metric existed lack its array — default every one
+    engagementMetrics.set(eventId, {
+      likes: [], reposts: [], quotes: [], bookmarks: [], zaps: [],
+      ...metrics,
+      isLoading: false
+    })
   })
 }
 
@@ -106,11 +111,39 @@ export function useEngagementMetrics() {
     }
   }
 
-  const processEngagementEvent = (event, targetEventId = null) => {
+  const addQuote = (event, eventId) => {
+    initializeEngagementData(eventId)
+    const metrics = engagementMetrics.get(eventId)
+    const quote = createEngagementData(event, 'quote', eventId)
+    if (!metrics.quotes.find(item => item.id === quote.id)) {
+      metrics.quotes.unshift(quote)
+    }
+  }
+
+  /**
+   * @param {object} event
+   * @param {string|null} targetEventId — event the subscription was opened for
+   * @param {string|null} targetAddress — its NIP-33 address (`30023:<pubkey>:<d>`), for long-form
+   */
+  const processEngagementEvent = (event, targetEventId = null, targetAddress = null) => {
     if (processedEventIds.has(event.id)) {
       return
     }
     processedEventIds.add(event.id)
+
+    // NIP-18 quotes: kind 1 with `q` tags naming an event id or an address
+    if (event.kind === 1) {
+      const quoted = event.tags.filter(tag => tag[0] === 'q' && tag[1]).map(tag => tag[1])
+      if (targetEventId) {
+        if (quoted.includes(targetEventId) || (targetAddress && quoted.includes(targetAddress))) {
+          addQuote(event, targetEventId)
+        }
+      } else {
+        // Batch subscriptions cover many events — credit each tracked one this note quotes
+        quoted.filter(id => engagementMetrics.has(id)).forEach(id => addQuote(event, id))
+      }
+      return
+    }
 
     if ([10001, 10002, 10003, 30001, 30002, 30003].includes(event.kind)) {
       const bookmarkedEventIds = event.tags.filter(tag => tag[0] === 'e').map(tag => tag[1])
@@ -149,7 +182,7 @@ export function useEngagementMetrics() {
       }
     }
 
-    let referencedEventId = targetEventId || event.tags.find(tag => tag[0] === 'q')?.[1] || event.tags.find(tag => tag[0] === 'e')?.[1]
+    let referencedEventId = targetEventId || event.tags.find(tag => tag[0] === 'e')?.[1]
     
     if (!referencedEventId && !targetEventId) {
       return
@@ -170,14 +203,6 @@ export function useEngagementMetrics() {
       case 6:
         engagementData = createEngagementData(event, 'repost', referencedEventId)
         targetArray = metrics.reposts
-        break
-
-      case 1:
-        if (!event.tags.some(tag => tag[0] === 'q' && tag[1] === referencedEventId)) {
-          return
-        }
-        engagementData = createEngagementData(event, 'quote', referencedEventId)
-        targetArray = metrics.quotes
         break
 
       case 10001:
@@ -457,7 +482,7 @@ export function useEngagementMetrics() {
 
       const subscription = nostrService.subscribe(aTagFilters, {
         onevent: (event) => {
-          processEngagementEvent(event, eventId)
+          processEngagementEvent(event, eventId, aTagIdentifier)
         },
         oneose: () => {
           // Close after grace period for late-arriving events
