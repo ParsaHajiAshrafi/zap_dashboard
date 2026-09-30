@@ -4,7 +4,7 @@
  * Every file in the codebase that needs Nostr primitives should import
  * from HERE, never directly from 'nostr-core'.
  *
- * Re-exports the full nostr-core v0.6.0 API surface.
+ * Re-exports the nostr-core v1 API surface used by the app.
  */
 
 // ── Event handling ────────────────────────────────────────────────

@@ -29,7 +29,10 @@ function stableCacheKey(filter) {
 
 class NostrService {
   constructor() {
-    this.pool = new RelayPool()
+    // nostr-core ≥1.0 relays auto-reconnect and replay subscriptions by default.
+    // This service owns reconnects (health checks, backoff, subscription re-open),
+    // so the built-in behavior is disabled to avoid duplicate connections and REQs.
+    this.pool = new RelayPool({ reconnect: false })
     this._initialized = false
     this._eventListeners = new Set()
     this._createReadyGate()
