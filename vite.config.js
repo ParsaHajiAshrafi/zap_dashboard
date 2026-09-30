@@ -1,6 +1,20 @@
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import {VitePWA} from 'vite-plugin-pwa'
+import bridgeProxy from './netlify/functions/bridge-proxy.mjs'
+
+// Serve the Netlify bridge-proxy function during `vite dev`
+const bridgeProxyDev = () => ({
+    name: 'bridge-proxy-dev',
+    configureServer(server) {
+        server.middlewares.use('/.netlify/functions/bridge-proxy', async (req, res) => {
+            const response = await bridgeProxy(new Request(`http://localhost${req.originalUrl}`, {method: req.method}))
+            res.statusCode = response.status
+            response.headers.forEach((value, key) => res.setHeader(key, value))
+            res.end(Buffer.from(await response.arrayBuffer()))
+        })
+    }
+})
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +25,7 @@ export default defineConfig({
     },
     plugins: [
         vue(),
+        bridgeProxyDev(),
         VitePWA({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.svg', 'robots.txt'],

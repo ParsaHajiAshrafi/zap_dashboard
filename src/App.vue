@@ -27,6 +27,7 @@ import { nostrService } from './services/nostr/NostrService.js'
 import { useNostrNotes } from './composables/content/useNostrNotes.js'
 import { useCampaigns } from './composables/campaigns/useCampaigns.js'
 import { useAudience } from './composables/audience/useAudience.js'
+import { useContentBridge } from './composables/content/useContentBridge.js'
 import { startRefreshCycle, stopRefreshCycle, setActiveGroup } from './utils/refreshCycle.js'
 import { APP_HARD_TIMEOUT, RELAY_READY_TIMEOUT } from './utils/constants.js'
 import AppLoader from './components/layout/AppLoader.vue'
@@ -67,6 +68,7 @@ const InvoiceShare = lazyLoad(() => import('./pages/InvoiceShare.vue'))
 const Calendar = lazyLoad(() => import('./pages/Calendar.vue'))
 const ContestResolver = lazyLoad(() => import('./pages/ContestResolver.vue'))
 const Media = lazyLoad(() => import('./pages/Media.vue'))
+const ContentBridge = lazyLoad(() => import('./pages/ContentBridge.vue'))
 const SocialDesk = lazyLoad(() => import('./pages/SocialDesk.vue'))
 const WelcomeModal = lazyLoad(() => import('./components/modals/WelcomeModal.vue'))
 const HelpModal = lazyLoad(() => import('./components/modals/HelpModal.vue'))
@@ -192,6 +194,9 @@ const { isLoading: isCampaignsLoading, userCampaigns } = useCampaigns()
 
 // Initialize audience early so loading screen can track it
 const { isLoading: isAudienceLoading, following, followers } = useAudience()
+
+// Content Bridge self-registers with the refresh cycle so auto-publish runs on every page
+useContentBridge()
 
 // Global state
 const zapData = ref([])
@@ -394,6 +399,7 @@ const components = {
   calendar: Calendar,
   contest: ContestResolver,
   media: Media,
+  'content-bridge': ContentBridge,
   'social-desk': SocialDesk
 }
 
@@ -625,6 +631,7 @@ const pageGroupMap = {
   audience: 'audience',
   calendar: 'calendar',
   media: 'dashboard',
+  'content-bridge': 'content',
   settings: 'dashboard',
   notifications: 'dashboard'
 }

@@ -20,7 +20,8 @@ import {
   IconEdit,
   IconCalendar,
   IconHelp,
-  IconBook
+  IconBook,
+  IconRss
 } from '@iconify-prerendered/vue-tabler'
 import NotificationDropdown from '../shared/NotificationDropdown.vue'
 import ThreadsPromo from '../shared/ThreadsPromo.vue'
@@ -108,6 +109,11 @@ const pageInfo = computed(() => {
       title: 'Calendar',
       description: 'Schedule and manage your zap-related events',
       icon: IconCalendar
+    },
+    'content-bridge': {
+      title: 'Content Bridge',
+      description: 'Syndicate your blog posts to Nostr',
+      icon: IconRss
     },
     'social-desk': {
       title: 'SocialDesk',
