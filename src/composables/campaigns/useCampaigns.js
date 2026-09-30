@@ -723,6 +723,8 @@ export function useCampaigns() {
 
   // Guard to prevent double aggregation from auth watcher + signature watcher
   let _aggregationRunning = false
+  // Declared before the immediate auth watcher below, which clears it on logout
+  let _campaignSaveTimer = null
 
   // Watch for authentication changes
   watch(auth.isAuthenticated, async (authenticated) => {
@@ -761,7 +763,6 @@ export function useCampaigns() {
   })
 
   // Save campaigns to storage on changes (debounced, shallow watch on length)
-  let _campaignSaveTimer = null
   const debouncedSaveCampaigns = () => {
     if (_campaignSaveTimer) clearTimeout(_campaignSaveTimer)
     _campaignSaveTimer = setTimeout(saveCampaignsToStorage, 2000)
