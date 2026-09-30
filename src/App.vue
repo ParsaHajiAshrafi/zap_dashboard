@@ -69,6 +69,7 @@ const Calendar = lazyLoad(() => import('./pages/Calendar.vue'))
 const ContestResolver = lazyLoad(() => import('./pages/ContestResolver.vue'))
 const Media = lazyLoad(() => import('./pages/Media.vue'))
 const ContentBridge = lazyLoad(() => import('./pages/ContentBridge.vue'))
+const ImportContent = lazyLoad(() => import('./pages/ImportContent.vue'))
 const SocialDesk = lazyLoad(() => import('./pages/SocialDesk.vue'))
 const WelcomeModal = lazyLoad(() => import('./components/modals/WelcomeModal.vue'))
 const HelpModal = lazyLoad(() => import('./components/modals/HelpModal.vue'))
@@ -400,6 +401,7 @@ const components = {
   contest: ContestResolver,
   media: Media,
   'content-bridge': ContentBridge,
+  import: ImportContent,
   'social-desk': SocialDesk
 }
 
@@ -632,6 +634,7 @@ const pageGroupMap = {
   calendar: 'calendar',
   media: 'dashboard',
   'content-bridge': 'content',
+  import: 'content',
   settings: 'dashboard',
   notifications: 'dashboard'
 }

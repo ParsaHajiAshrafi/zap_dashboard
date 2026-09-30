@@ -23,7 +23,8 @@ import {
   IconTrophy,
   IconPhoto,
   IconColumns,
-  IconRss
+  IconRss,
+  IconFileImport
 } from '@iconify-prerendered/vue-tabler'
 
 const currentPage = inject('currentPage')
@@ -53,7 +54,7 @@ const totalSats = computed(() => {
 
 const checkAndOpenParentMenu = () => {
   const dashboardPages = ['dashboard', 'lightning-explorer']
-  const studioPages = ['content', 'notes', 'content-bridge', 'campaigns', 'contest']
+  const studioPages = ['content', 'notes', 'content-bridge', 'import', 'campaigns', 'contest']
   const audiencePages = ['audience', 'chat-zaps']
 
   if (dashboardPages.includes(currentPage.value)) {
@@ -98,6 +99,7 @@ const menuItems = [
       { id: 'content', label: 'Articles', icon: IconFileText },
       { id: 'notes', label: 'Notes', icon: IconEdit },
       { id: 'content-bridge', label: 'Content Bridge', icon: IconRss },
+      { id: 'import', label: 'Import', icon: IconFileImport },
       { id: 'campaigns', label: 'Campaigns', icon: IconTarget },
       { id: 'contest', label: 'Contest', icon: IconTrophy }
     ]

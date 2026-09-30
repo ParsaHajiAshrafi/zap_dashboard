@@ -27,20 +27,20 @@ export function detectPlatform(feedUrl = '', generator = '') {
 
 // Namespaced tags are matched by local name so parsing doesn't depend on
 // how a feed declares its prefixes (content:encoded, media:content, dc:creator…)
-function children(el, localName) {
+export function children(el, localName) {
   return Array.from(el?.children || []).filter(c => c.localName === localName || c.tagName === localName)
 }
 
-function child(el, localName) {
+export function child(el, localName) {
   return children(el, localName)[0] || null
 }
 
-function text(el, localName) {
+export function text(el, localName) {
   const node = child(el, localName)
   return node ? node.textContent.trim() : ''
 }
 
-function toUnix(value) {
+export function toUnix(value) {
   if (!value) return null
   const ms = Date.parse(value)
   return Number.isNaN(ms) ? null : Math.floor(ms / 1000)
@@ -60,7 +60,7 @@ function stripHtml(html) {
     .trim()
 }
 
-function decodeEntities(str) {
+export function decodeEntities(str) {
   if (!str || !str.includes('&')) return str
   const doc = new DOMParser().parseFromString(`<!doctype html><body>${str}`, 'text/html')
   return doc.body.textContent
@@ -88,7 +88,7 @@ function mediaImage(item) {
   return ''
 }
 
-function parseRssItem(item) {
+export function parseRssItem(item) {
   const html = text(item, 'encoded') || text(item, 'description')
   const guid = text(item, 'guid')
   const link = text(item, 'link') || (/^https?:/.test(guid) ? guid : '')
@@ -111,7 +111,7 @@ function atomLink(entry) {
   return (alt || links[0])?.getAttribute('href') || ''
 }
 
-function parseAtomEntry(entry) {
+export function parseAtomEntry(entry) {
   const html = text(entry, 'content') || text(entry, 'summary')
   const link = atomLink(entry)
   const author = child(entry, 'author')
@@ -142,12 +142,17 @@ function inlineCdata(xml) {
   )
 }
 
-export function parseFeed(xml, feedUrl = '') {
+/** Parse an XML document, throwing on malformed input. */
+export function parseXml(xml) {
   const doc = new DOMParser().parseFromString(inlineCdata(xml), 'application/xml')
   if (doc.getElementsByTagName('parsererror').length) {
     throw new Error('Feed is not valid XML')
   }
-  const root = doc.documentElement
+  return doc
+}
+
+export function parseFeed(xml, feedUrl = '') {
+  const root = parseXml(xml).documentElement
   let meta, items
 
   if (root.localName === 'feed') {
